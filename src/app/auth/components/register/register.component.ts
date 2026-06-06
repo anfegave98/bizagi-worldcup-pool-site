@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthFacade } from '../../facades/auth.facade';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 
@@ -128,7 +128,7 @@ export class RegisterComponent {
   protected readonly facade = inject(AuthFacade);
   private readonly toast    = inject(ToastService);
   private readonly fb       = inject(FormBuilder);
-  private readonly router   = inject({ token: 'router' } as any);
+  private readonly router = inject(Router);
 
   showPwd = signal(false);
   success = signal(false);
@@ -146,7 +146,7 @@ export class RegisterComponent {
       next: () => {
         this.success.set(true);
         this.toast.success('¡Cuenta creada exitosamente! Inicia sesión para continuar.');
-        setTimeout(() => this.facade['router'].navigate(['/auth/login']), 2000);
+        setTimeout(() => this.router.navigate(['/auth/login']), 2000);
       },
     });
   }
