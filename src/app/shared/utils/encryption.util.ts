@@ -4,30 +4,26 @@ import { environment } from '../../../environments/environment';
 /**
  * Utilidad de cifrado AES-256-CBC para el frontend.
  *
- * Flujo completo para endpoints críticos:
- *  1. El DTO se serializa a JSON.
- *  2. El JSON se cifra con AES-256-CBC (Key e IV del environment).
- *  3. El resultado Base64 se envuelve en { "data": "<base64>" }.
- *  4. El backend (DecryptionMiddleware) recibe el wrapper,
- *     descifra el Base64 y reemplaza el body antes de que
- *     llegue al controller — que siempre recibe el DTO limpio.
+ * IMPORTANTE — Compatibilidad con .NET AES:
+ * CryptoJS interpreta un string como clave usando derivación EVP_BytesToKey (formato OpenSSL),
+ * lo que es INCOMPATIBLE con el AES puro que usa .NET.
+ * Para que ambos lados usen exactamente los mismos bytes, la Key e IV deben
+ * configurarse en Base64 en el environment y decodificarse a WordArray antes
+ * de pasarlos a CryptoJS. Así ambos trabajan con los mismos bytes raw.
  *
- * Cuando `environment.encryption.enabled` es false (desarrollo),
- * `encryptBody` devuelve el DTO original sin envolver,
- * lo que permite usar Swagger directamente con JSON plano.
+ * Configuración requerida en environment.ts:
+ *   key: Base64 de 32 bytes (AES-256) — mismo valor que Encryption:Key del backend
+ *   iv:  Base64 de 16 bytes (128-bit)  — mismo valor que Encryption:IV del backend
  */
 export class EncryptionUtil {
 
   private static get cfg() { return environment.encryption; }
 
-  // ─── Método principal ─────────────────────────────────────────────────────
+  // ─── Método principal: cifra un DTO completo ──────────────────────────────
 
   /**
-   * Serializa el DTO a JSON, lo cifra con AES y lo envuelve en `{ data: "..." }`.
+   * Serializa el DTO a JSON, lo cifra con AES-256-CBC y lo envuelve en { data: "..." }.
    * Si el cifrado está deshabilitado, devuelve el DTO original sin modificar.
-   *
-   * @param dto Objeto a cifrar.
-   * @returns `{ data: "<Base64>" }` si cifrado habilitado, o el DTO original.
    */
   static encryptBody<T extends object>(dto: T): { data: string } | T {
     if (!this.cfg.enabled) return dto;
@@ -36,37 +32,44 @@ export class EncryptionUtil {
     return { data: encrypted };
   }
 
-  // ─── Cifrado / descifrado de strings ─────────────────────────────────────
-
   /**
-   * Cifra un string con AES-256-CBC y devuelve el resultado en Base64.
+   * Cifra un string con AES-256-CBC usando Key e IV en Base64.
+   * Decodifica la Key e IV de Base64 a WordArray para compatibilidad exacta con .NET.
    */
   static encrypt(plainText: string): string {
     if (!this.cfg.enabled || !plainText) return plainText;
 
-    const key = CryptoJS.enc.Utf8.parse(this.cfg.key);
-    const iv  = CryptoJS.enc.Utf8.parse(this.cfg.iv);
+    // Decodificar Key e IV de Base64 a WordArray (bytes raw)
+    // CRÍTICO: usar CryptoJS.enc.Base64.parse() en lugar de CryptoJS.enc.Utf8.parse()
+    const key = CryptoJS.enc.Base64.parse(this.cfg.key);
+    const iv  = CryptoJS.enc.Base64.parse(this.cfg.iv);
 
-    return CryptoJS.AES.encrypt(plainText, key, {
+    const encrypted = CryptoJS.AES.encrypt(plainText, key, {
       iv,
       mode:    CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
-    }).toString();
+    });
+
+    return encrypted.toString(); // Base64 estándar compatible con Convert.FromBase64String() de .NET
   }
 
   /**
    * Descifra un string Base64 cifrado con AES-256-CBC.
+   * Decodifica la Key e IV de Base64 a WordArray para compatibilidad exacta con .NET.
    */
   static decrypt(cipherText: string): string {
     if (!this.cfg.enabled || !cipherText) return cipherText;
 
-    const key = CryptoJS.enc.Utf8.parse(this.cfg.key);
-    const iv  = CryptoJS.enc.Utf8.parse(this.cfg.iv);
+    // Decodificar Key e IV de Base64 a WordArray (bytes raw)
+    const key = CryptoJS.enc.Base64.parse(this.cfg.key);
+    const iv  = CryptoJS.enc.Base64.parse(this.cfg.iv);
 
-    return CryptoJS.AES.decrypt(cipherText, key, {
+    const decrypted = CryptoJS.AES.decrypt(cipherText, key, {
       iv,
       mode:    CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
-    }).toString(CryptoJS.enc.Utf8);
+    });
+
+    return decrypted.toString(CryptoJS.enc.Utf8);
   }
 }

@@ -1,11 +1,11 @@
 import { Component, inject, input, output, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, FormControl } from '@angular/forms';
 import { PredictionFacade } from '../../facades/prediction.facade';
 import { ToastService } from '../../../shared/components/toast/toast.service';
 import { MatchDto, PredictionDto } from '../../models/pool.models';
 
-/** Validator: integer >= 0 */
+/** Validator: entero mayor o igual a 0 */
 function nonNegativeInt(control: AbstractControl) {
   const v = control.value;
   if (v === null || v === '') return { required: true };
@@ -44,6 +44,7 @@ function nonNegativeInt(control: AbstractControl) {
             <!-- Match info -->
             <div class="flex items-center justify-center gap-4 py-4 px-3
                         bg-gradient-hero rounded-xl mb-5">
+
               <!-- Home team -->
               <div class="flex flex-col items-center gap-1.5 flex-1">
                 <div class="w-12 h-12 rounded-xl bg-gradient-primary shadow-md
@@ -55,22 +56,22 @@ function nonNegativeInt(control: AbstractControl) {
                 </span>
               </div>
 
-              <!-- Score inputs -->
+              <!-- Score inputs usando [formControl] directamente (sin formGroup padre) -->
               <div class="flex items-center gap-2">
                 <input
-                  formControlName="homeGoals"
-                  [formControl]="form.controls.homeGoals"
-                  type="number" min="0"
+                  [formControl]="homeGoalsControl"
+                  type="number"
+                  min="0"
                   class="input w-14 text-center text-xl font-bold px-2"
-                  [class.input-error]="isInvalid('homeGoals')"
+                  [class.input-error]="isControlInvalid(homeGoalsControl)"
                   placeholder="0" />
                 <span class="text-slate-400 font-bold text-lg">–</span>
                 <input
-                  formControlName="awayGoals"
-                  [formControl]="form.controls.awayGoals"
-                  type="number" min="0"
+                  [formControl]="awayGoalsControl"
+                  type="number"
+                  min="0"
                   class="input w-14 text-center text-xl font-bold px-2"
-                  [class.input-error]="isInvalid('awayGoals')"
+                  [class.input-error]="isControlInvalid(awayGoalsControl)"
                   placeholder="0" />
               </div>
 
@@ -87,12 +88,13 @@ function nonNegativeInt(control: AbstractControl) {
             </div>
 
             <!-- Validation errors -->
-            @if (isInvalid('homeGoals') || isInvalid('awayGoals')) {
+            @if (isControlInvalid(homeGoalsControl) || isControlInvalid(awayGoalsControl)) {
               <p class="error-msg justify-center mb-3">
                 ⚠ Los goles deben ser números enteros mayores o iguales a 0.
               </p>
             }
 
+            <!-- Error del servicio -->
             @if (predictionFacade.error()) {
               <div class="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200
                           text-red-700 text-sm mb-3">
@@ -134,17 +136,16 @@ export class PredictionFormComponent implements OnInit {
 
   protected readonly predictionFacade = inject(PredictionFacade);
   private readonly toast              = inject(ToastService);
-  private readonly fb                 = inject(FormBuilder);
 
-  form = this.fb.group({
-    homeGoals: [0, [Validators.required, nonNegativeInt]],
-    awayGoals: [0, [Validators.required, nonNegativeInt]],
-  });
+  // FormControls independientes — sin formGroup para evitar el error NG01050
+  homeGoalsControl = new FormControl<number>(0, [Validators.required, nonNegativeInt]);
+  awayGoalsControl = new FormControl<number>(0, [Validators.required, nonNegativeInt]);
 
   ngOnInit(): void {
     const pred = this.existing();
     if (pred) {
-      this.form.patchValue({ homeGoals: pred.homeGoals, awayGoals: pred.awayGoals });
+      this.homeGoalsControl.setValue(pred.homeGoals);
+      this.awayGoalsControl.setValue(pred.awayGoals);
     }
     this.predictionFacade.error.set(null);
   }
@@ -153,20 +154,20 @@ export class PredictionFormComponent implements OnInit {
     return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   }
 
-  isInvalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c?.invalid && c?.touched);
+  isControlInvalid(control: FormControl): boolean {
+    return control.invalid && control.touched;
   }
 
   onSubmit(): void {
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+    this.homeGoalsControl.markAsTouched();
+    this.awayGoalsControl.markAsTouched();
 
-    const { homeGoals, awayGoals } = this.form.getRawValue();
+    if (this.homeGoalsControl.invalid || this.awayGoalsControl.invalid) return;
+
     this.predictionFacade.savePrediction({
       idMatch:   this.match().id,
-      homeGoals: Number(homeGoals),
-      awayGoals: Number(awayGoals),
+      homeGoals: Number(this.homeGoalsControl.value),
+      awayGoals: Number(this.awayGoalsControl.value),
     }).subscribe({
       next: () => {
         this.toast.success('¡Predicción guardada exitosamente!');

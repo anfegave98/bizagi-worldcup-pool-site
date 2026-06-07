@@ -2,8 +2,8 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:5277/api/v1',
   encryption: {
-    enabled: false,
-    key: '6@t8I4qQ9aSiOJvvn!y&EW&o%1D4YuDY', // 32 chars → AES-256
-    iv: 'Y!KQm3%gCO&Me8!U', // Exactamente 16 chars → 128-bit IV
-  },
+    enabled: true,
+    key: 'gOxokGUU1PD+0Zp52tMjHif70MF8nR1ameX0inQg7Ck=',  // Base64 de 32 bytes — AES-256
+    iv:  'p76iDDQAhbdUXmgRcthukQ==',                        // Base64 de 16 bytes — 128-bit IV
+  }
 };
