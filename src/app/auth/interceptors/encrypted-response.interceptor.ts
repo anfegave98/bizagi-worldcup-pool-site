@@ -108,9 +108,17 @@ export const encryptedResponseInterceptor: HttpInterceptorFn = (req, next) => {
 
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
+        const message = err.error?.message ?? '';
+
+        if (message === 'Credenciales inválidas.') {
+          return throwError(() => err);
+        }
+
         authService.logout();
         router.navigate(['/auth/login']);
-        toastService.error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+        toastService.error(
+          'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+        );
       }
 
       if (err.status === 429) {

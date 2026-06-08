@@ -87,7 +87,7 @@ import { ToastService } from '../../../shared/components/toast/toast.service';
                   <button type="button" (click)="showPwd.set(!showPwd())"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400
                            hover:text-slate-600 transition-colors text-sm">
-                    {{ showPwd() ? '🙈' : '👁' }}
+                    {{ showPwd() ?  '👁' : '🙈' }}
                   </button>
                 </div>
                 @if (isInvalid('password')) {
@@ -132,6 +132,10 @@ export class RegisterComponent {
 
   showPwd = signal(false);
   success = signal(false);
+
+  constructor() {
+  this.facade.clearError();
+}
 
   form = this.fb.group({
     fullName: ['', [Validators.required, Validators.maxLength(150)]],
