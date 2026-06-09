@@ -26,14 +26,13 @@ interface NavItem {
               class="flex items-center gap-2.5 group"
             >
               <div
-                class="w-9 h-9 rounded-xl bg-gradient-primary shadow-md flex items-center
-                          justify-center text-lg transition-transform group-hover:scale-105"
+                class="w-9 h-9 rounded-xl bg-gradient-primary shadow-md flex items-center justify-center text-lg transition-transform group-hover:scale-105"
               >
                 ⚽
               </div>
-              <span class="font-bold text-slate-800 hidden sm:block"
-                >Polla Mundialista</span
-              >
+              <span class="font-bold text-slate-800 hidden sm:block">
+                Polla Mundialista
+              </span>
             </a>
 
             <!-- Desktop nav -->
@@ -43,8 +42,8 @@ interface NavItem {
                   [routerLink]="item.route"
                   routerLinkActive="bg-primary-50 text-primary-700"
                   class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium
-                          text-slate-600 hover:bg-slate-100 hover:text-slate-800
-                          transition-all duration-150"
+                         text-slate-600 hover:bg-slate-100 hover:text-slate-800
+                         transition-all duration-150"
                 >
                   <span>{{ item.icon }}</span>
                   {{ item.label }}
@@ -52,8 +51,8 @@ interface NavItem {
               }
             </nav>
 
-            <!-- User menu -->
-            <div class="flex items-center gap-3">
+            <!-- User Menu -->
+            <div class="relative flex items-center gap-3">
               <!-- Avatar -->
               <button
                 (click)="menuOpen.set(!menuOpen())"
@@ -65,43 +64,56 @@ interface NavItem {
                 >
                   {{ initials() }}
                 </div>
+
                 <span
                   class="text-sm font-medium text-slate-700 hidden sm:block"
                 >
                   {{ facade.currentUser()?.userName }}
                 </span>
-                <span class="text-slate-400 text-xs">▾</span>
+
+                <span
+                  class="text-slate-400 text-xs transition-transform duration-200"
+                  [class.rotate-180]="menuOpen()"
+                >
+                  ▾
+                </span>
               </button>
 
               <!-- Dropdown -->
               @if (menuOpen()) {
                 <div
-                  class="absolute top-14 right-4 w-52 card shadow-card-lg animate-scale-in z-50"
+                  class="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl
+                         border border-slate-200 shadow-xl animate-scale-in z-50 overflow-hidden"
                 >
-                  <div class="p-3 border-b border-slate-100">
+                  <div class="p-4 border-b border-slate-100">
                     <p class="text-sm font-semibold text-slate-800">
                       {{ facade.currentUser()?.fullName }}
                     </p>
-                    <p class="text-xs text-slate-500 mt-0.5">
+
+                    <p class="text-xs text-slate-500 mt-1 break-all">
                       {{ facade.currentUser()?.email }}
                     </p>
+
                     @if (facade.isAdmin()) {
-                      <span class="badge badge-primary mt-1.5">Admin</span>
+                      <span class="badge badge-primary mt-2"> Admin </span>
                     }
                   </div>
-                  <div class="p-1.5">
+
+                  <div class="p-2">
                     <button
                       (click)="logout()"
-                      class="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600
-                             hover:bg-red-50 rounded-lg transition-colors font-medium"
+                      class="w-full flex items-center gap-2 px-3 py-2
+                             text-sm font-medium text-red-600
+                             hover:bg-red-50 rounded-lg transition-colors"
                     >
-                      <span>→</span> Cerrar sesión
+                      <span>→</span>
+                      Cerrar sesión
                     </button>
                   </div>
                 </div>
               }
 
-              <!-- Mobile menu button -->
+              <!-- Mobile Menu Button -->
               <button
                 (click)="mobileOpen.set(!mobileOpen())"
                 class="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors text-slate-600"
@@ -116,15 +128,15 @@ interface NavItem {
         @if (mobileOpen()) {
           <div
             class="md:hidden border-t border-slate-100 bg-white px-4 py-3
-                      flex flex-col gap-1 animate-slide-down"
+                   flex flex-col gap-1 animate-slide-down"
           >
             @for (item of visibleNav(); track item.route) {
               <a
                 [routerLink]="item.route"
                 routerLinkActive="bg-primary-50 text-primary-700"
                 (click)="mobileOpen.set(false)"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                        text-slate-600 hover:bg-slate-100 transition-colors"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm
+                       font-medium text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 <span>{{ item.icon }}</span>
                 {{ item.label }}
@@ -134,7 +146,7 @@ interface NavItem {
         }
       </header>
 
-      <!-- Backdrop for dropdown -->
+      <!-- Backdrop -->
       @if (menuOpen()) {
         <div class="fixed inset-0 z-30" (click)="menuOpen.set(false)"></div>
       }
@@ -171,7 +183,11 @@ export class LayoutComponent {
 
   initials = () => {
     const user = this.facade.currentUser();
-    if (!user) return '?';
+
+    if (!user) {
+      return '?';
+    }
+
     return (user.fullName || user.userName)
       .split(' ')
       .slice(0, 2)
