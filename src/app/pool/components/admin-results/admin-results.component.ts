@@ -44,7 +44,6 @@ import { MatchDto } from '../../models/pool.models';
                     <!-- Match info -->
                     <div class="flex items-center gap-4 flex-1">
                       <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <!-- Home team -->
                         <div class="flex flex-col items-center gap-1 min-w-0">
                           <div
                             class="w-10 h-10 rounded-xl bg-gradient-primary/10 border border-primary-100
@@ -58,8 +57,6 @@ import { MatchDto } from '../../models/pool.models';
                             {{ match.homeTeamName }}
                           </span>
                         </div>
-
-                        <!-- VS + date -->
                         <div
                           class="flex flex-col items-center shrink-0 gap-0.5"
                         >
@@ -70,8 +67,6 @@ import { MatchDto } from '../../models/pool.models';
                             {{ match.matchDate | date: 'dd/MM' }}
                           </span>
                         </div>
-
-                        <!-- Away team -->
                         <div class="flex flex-col items-center gap-1 min-w-0">
                           <div
                             class="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100
@@ -88,7 +83,7 @@ import { MatchDto } from '../../models/pool.models';
                       </div>
                     </div>
 
-                    <!-- Result form o botón registrar -->
+                    <!-- Formulario de resultado o botón -->
                     @if (selectedMatchId() === match.id) {
                       <div class="flex items-start gap-2 flex-wrap">
                         <!-- Goles local -->
@@ -177,7 +172,6 @@ import { MatchDto } from '../../models/pool.models';
                           }
                         </div>
 
-                        <!-- Confirmar -->
                         <button
                           (click)="submitResult(match)"
                           class="btn-primary btn-sm mt-0.5"
@@ -222,7 +216,7 @@ import { MatchDto } from '../../models/pool.models';
         </section>
       }
 
-      <!-- Partidos finalizados -->
+      <!-- Partidos finalizados CON resultado -->
       @if (matchFacade.finished().length > 0) {
         <section>
           <h3
@@ -232,16 +226,44 @@ import { MatchDto } from '../../models/pool.models';
           </h3>
           <div class="space-y-2">
             @for (match of matchFacade.finished(); track match.id) {
-              <div class="card opacity-70">
-                <div class="card-body py-3">
-                  <div class="flex items-center gap-3">
+              <div class="card opacity-80">
+                <div class="card-body py-3.5">
+                  <div class="flex items-center gap-3 flex-wrap">
                     <span class="badge badge-success shrink-0"
                       >✓ Finalizado</span
                     >
-                    <span class="text-sm text-slate-600 font-medium">
-                      {{ match.homeTeamName }} vs {{ match.awayTeamName }}
-                    </span>
-                    <span class="text-xs text-slate-400 ml-auto">
+
+                    <!-- Equipos y resultado real -->
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                      <span
+                        class="text-sm font-semibold text-slate-700 truncate"
+                      >
+                        {{ match.homeTeamName }}
+                      </span>
+
+                      <!-- Marcador real destacado -->
+                      @if (
+                        match.realHomeGoals !== null &&
+                        match.realAwayGoals !== null
+                      ) {
+                        <span
+                          class="px-3 py-0.5 rounded-lg bg-slate-100 text-slate-800
+                                     font-extrabold text-sm shrink-0 tabular-nums"
+                        >
+                          {{ match.realHomeGoals }} – {{ match.realAwayGoals }}
+                        </span>
+                      } @else {
+                        <span class="text-xs text-slate-400 shrink-0">vs</span>
+                      }
+
+                      <span
+                        class="text-sm font-semibold text-slate-700 truncate"
+                      >
+                        {{ match.awayTeamName }}
+                      </span>
+                    </div>
+
+                    <span class="text-xs text-slate-400 ml-auto shrink-0">
                       {{ match.matchDate | date: 'dd/MM/yyyy' }}
                     </span>
                   </div>
@@ -279,7 +301,6 @@ export class AdminResultsComponent implements OnInit {
 
   selectedMatchId = signal<number | null>(null);
 
-  // Cache de formularios por matchId
   private forms = new Map<number, ReturnType<typeof this.buildForm>>();
 
   ngOnInit(): void {

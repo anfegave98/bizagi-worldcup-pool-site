@@ -46,6 +46,7 @@ import { MatchDto } from '../../models/pool.models';
       <!-- Grupos -->
       @for (group of groupEntries(); track group[0]) {
         <section>
+          <!-- Group header -->
           <div class="flex items-center gap-3 mb-3">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-primary-500"></span>
@@ -57,11 +58,13 @@ import { MatchDto } from '../../models/pool.models';
             </span>
           </div>
 
+          <!-- Match cards grid -->
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @for (match of group[1]; track match.id) {
               <div
-                class="card card-hover transition-all duration-200 hover:-translate-y-0.5 animate-slide-up"
-                [class.opacity-75]="
+                class="card card-hover cursor-pointer transition-all duration-200
+                          hover:-translate-y-0.5 animate-slide-up"
+                [class.opacity-80]="
                   match.status === 'Finished' || isMatchStarted(match)
                 "
               >
@@ -91,9 +94,9 @@ import { MatchDto } from '../../models/pool.models';
                     </span>
                   </div>
 
-                  <!-- Teams -->
+                  <!-- Teams + marcador -->
                   <div class="flex items-center justify-between gap-2">
-                    <!-- Home -->
+                    <!-- Home team -->
                     <div
                       class="flex flex-col items-center gap-1.5 flex-1 min-w-0"
                     >
@@ -111,20 +114,44 @@ import { MatchDto } from '../../models/pool.models';
                       </span>
                     </div>
 
-                    <!-- VS -->
+                    <!-- Centro: resultado real o predicción o VS -->
                     <div class="flex flex-col items-center gap-1 shrink-0">
-                      <span
-                        class="text-xs font-bold text-slate-400 tracking-widest"
-                        >VS</span
-                      >
-                      @if (getPrediction(match.id); as pred) {
-                        <span class="text-sm font-bold text-slate-800">
-                          {{ pred.homeGoals }} – {{ pred.awayGoals }}
+                      @if (
+                        match.status === 'Finished' &&
+                        match.realHomeGoals !== null
+                      ) {
+                        <!-- Resultado real en grande -->
+                        <span
+                          class="text-lg font-extrabold text-slate-800 leading-none"
+                        >
+                          {{ match.realHomeGoals }} – {{ match.realAwayGoals }}
                         </span>
+                        <span
+                          class="text-[10px] text-emerald-600 font-semibold uppercase tracking-wide"
+                        >
+                          Resultado
+                        </span>
+                        <!-- Predicción del usuario si existe -->
+                        @if (getPrediction(match.id); as pred) {
+                          <span class="text-[10px] text-slate-400 mt-0.5">
+                            Tú: {{ pred.homeGoals }}–{{ pred.awayGoals }}
+                          </span>
+                        }
+                      } @else {
+                        <!-- VS con predicción si existe -->
+                        <span
+                          class="text-xs font-bold text-slate-400 tracking-widest"
+                          >VS</span
+                        >
+                        @if (getPrediction(match.id); as pred) {
+                          <span class="text-sm font-bold text-slate-800">
+                            {{ pred.homeGoals }} – {{ pred.awayGoals }}
+                          </span>
+                        }
                       }
                     </div>
 
-                    <!-- Away -->
+                    <!-- Away team -->
                     <div
                       class="flex flex-col items-center gap-1.5 flex-1 min-w-0"
                     >
@@ -147,7 +174,7 @@ import { MatchDto } from '../../models/pool.models';
                     {{ match.roundName }}
                   </p>
 
-                  <!-- Action button -->
+                  <!-- Action -->
                   <div class="mt-3 pt-3 border-t border-slate-100">
                     @if (match.status === 'Finished') {
                       <!-- Partido finalizado -->
@@ -252,9 +279,8 @@ export class MatchListComponent implements OnInit {
   }
 
   /**
-   * Verifica si la fecha del partido ya ocurrió comparando en UTC.
-   * Se usa para bloquear predicciones aunque el partido siga en estado "Scheduled"
-   * (el admin aún no ha registrado el resultado).
+   * Verifica si la fecha del partido ya ocurrió.
+   * Bloquea predicciones aunque el partido siga en estado "Scheduled".
    */
   isMatchStarted(match: MatchDto): boolean {
     return new Date() >= new Date(match.matchDate);

@@ -35,7 +35,9 @@ import { ScoreBadgeComponent } from '../../../shared/components/score-badge/scor
           </div>
           <div class="stat-card col-span-2 sm:col-span-1">
             <p class="stat-label">Calculadas</p>
-            <p class="stat-value text-gradient">{{ facade.calculatedCount() }} / {{ facade.predictions().length }}</p>
+            <p class="stat-value text-gradient">
+              {{ facade.calculatedCount() }} / {{ facade.predictions().length }}
+            </p>
           </div>
         </div>
       }
@@ -61,13 +63,14 @@ import { ScoreBadgeComponent } from '../../../shared/components/score-badge/scor
                  [class.border-amber-200]="pred.isCalculated && pred.points === 1"
                  [class.border-red-200]="pred.isCalculated && pred.points === 0">
               <div class="card-body">
+
                 <div class="flex items-center gap-4">
 
-                  <!-- Teams & Score -->
+                  <!-- Teams & marcador -->
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between gap-3">
 
-                      <!-- Home -->
+                      <!-- Home team -->
                       <div class="flex flex-col items-center gap-1 min-w-0">
                         <div class="w-9 h-9 rounded-lg bg-gradient-primary/10 border border-primary-100
                                     flex items-center justify-center text-xs font-bold text-primary-700 shrink-0">
@@ -78,29 +81,56 @@ import { ScoreBadgeComponent } from '../../../shared/components/score-badge/scor
                         </span>
                       </div>
 
-                      <!-- Prediction vs Real -->
-                      <div class="flex flex-col items-center gap-1.5 shrink-0">
-                        <!-- Mi predicción -->
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-xs text-slate-400">Predicho:</span>
-                          <span class="font-bold text-slate-800 text-sm">
-                            {{ pred.homeGoals }} – {{ pred.awayGoals }}
-                          </span>
-                        </div>
-                        <!-- Resultado real -->
+                      <!-- Centro: predicción y resultado real -->
+                      <div class="flex flex-col items-center gap-2 shrink-0">
+
                         @if (pred.matchStatus === 'Finished') {
-                          <div class="flex items-center gap-1.5">
-                            <span class="text-xs text-slate-400">Real:</span>
-                            <span class="font-bold text-slate-600 text-sm">
+
+                          <!-- Resultado real -->
+                          <div class="flex flex-col items-center gap-0.5">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wide font-medium">
+                              Resultado real
+                            </span>
+                            <span class="text-base font-extrabold text-slate-800">
                               {{ pred.realHomeGoals }} – {{ pred.realAwayGoals }}
                             </span>
                           </div>
+
+                          <!-- Divisor -->
+                          <div class="w-12 h-px bg-slate-200"></div>
+
+                          <!-- Mi predicción -->
+                          <div class="flex flex-col items-center gap-0.5">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wide font-medium">
+                              Mi predicción
+                            </span>
+                            <span class="text-sm font-bold"
+                              [class.text-emerald-600]="pred.isCalculated && pred.points === 3"
+                              [class.text-amber-600]="pred.isCalculated && pred.points === 1"
+                              [class.text-red-500]="pred.isCalculated && pred.points === 0"
+                              [class.text-slate-700]="!pred.isCalculated">
+                              {{ pred.homeGoals }} – {{ pred.awayGoals }}
+                            </span>
+                          </div>
+
                         } @else {
-                          <span class="badge badge-primary text-[10px]">🕐 Pendiente</span>
+
+                          <!-- Partido no finalizado -->
+                          <div class="flex flex-col items-center gap-1">
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wide font-medium">
+                              Mi predicción
+                            </span>
+                            <span class="text-sm font-bold text-slate-800">
+                              {{ pred.homeGoals }} – {{ pred.awayGoals }}
+                            </span>
+                            <span class="badge badge-primary text-[10px] mt-0.5">🕐 Pendiente</span>
+                          </div>
+
                         }
+
                       </div>
 
-                      <!-- Away -->
+                      <!-- Away team -->
                       <div class="flex flex-col items-center gap-1 min-w-0">
                         <div class="w-9 h-9 rounded-lg bg-violet-50 border border-violet-100
                                     flex items-center justify-center text-xs font-bold text-violet-700 shrink-0">
@@ -125,6 +155,7 @@ import { ScoreBadgeComponent } from '../../../shared/components/score-badge/scor
                   </div>
 
                 </div>
+
               </div>
             </div>
           }

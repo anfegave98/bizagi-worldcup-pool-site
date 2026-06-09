@@ -10,6 +10,10 @@ export interface MatchDto {
   matchDate: string;
   roundName: string;
   status: 'Scheduled' | 'Finished';
+  /** Goles reales del equipo local. Null si el partido aún no ha finalizado. */
+  realHomeGoals: number | null;
+  /** Goles reales del equipo visitante. Null si el partido aún no ha finalizado. */
+  realAwayGoals: number | null;
 }
 
 /** DTO para crear o actualizar predicción */
